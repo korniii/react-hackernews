@@ -1,3 +1,3 @@
 # react hackernews
 
-example app
+example app;
