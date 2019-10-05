@@ -148,9 +148,9 @@ function Table (props){
     const [ isSortReverse, setIsSortReverse] = useState(false);
 
     function onSort(_sortKey) {
-        const isSortReverse = _sortKey === sortKey && !isSortReverse;
+        const _isSortReverse = _sortKey === sortKey && !isSortReverse;
         setSortKey(_sortKey);
-        setIsSortReverse(isSortReverse);
+        setIsSortReverse(_isSortReverse);
     }
 
     const { list, onDismiss, } = props;
