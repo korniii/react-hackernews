@@ -147,10 +147,10 @@ function Table (props){
     const [ sortKey, setSortKey ] = useState('NONE');
     const [ isSortReverse, setIsSortReverse] = useState(false);
 
-    function onSort(sortKey) {
-        const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
-        setSortKey(sortKey);
-        setIsSortReverse(isSortReverse);
+    function onSort(_sortKey) {
+        const _isSortReverse = _sortKey === sortKey && !isSortReverse;
+        setSortKey(_sortKey);
+        setIsSortReverse(_isSortReverse);
     }
 
     const { list, onDismiss, } = props;
@@ -162,16 +162,16 @@ function Table (props){
         <div className="table">
             <div className="table-header">
                 <span style={{width: '40%'}}>
-                    <Sort sortKey={'TITLE'} onSort={() => onSort} activeSortKey={sortKey}>Title</Sort>
+                    <Sort onSort={() => onSort('TITLE')} activeSortKey={sortKey}>Title</Sort>
                 </span>
                 <span style={{width: '30%'}}>
-                    <Sort sortKey={'AUTHOR'} onSort={() => onSort} activeSortKey={sortKey}>Author</Sort>
+                    <Sort onSort={() => onSort('AUTHOR')} activeSortKey={sortKey}>Author</Sort>
                 </span>
                 <span style={{width: '10%'}}>
-                    <Sort sortKey={'COMMENTS'} onSort={() => onSort} activeSortKey={sortKey}>Comments</Sort>
+                    <Sort onSort={() => onSort('COMMENTS')} activeSortKey={sortKey}>Comments</Sort>
                 </span>
                 <span style={{width: '10%'}}>
-                    <Sort sortKey={'POINTS'} onSort={() => onSort} activeSortKey={sortKey}>Points</Sort>
+                    <Sort onSort={() => onSort('POINTS')} activeSortKey={sortKey}>Points</Sort>
                 </span>
                 <span style={{width: '10%'}}>
                     Archive
