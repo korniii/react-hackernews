@@ -21,23 +21,7 @@ const SORTS = {
     POINTS: list => sortBy(list, 'points').reverse(),
 };
 
-const updateSearchTopStoriesState = (hits, page) => (prevState) => {
-    const { searchKey, results } = prevState;
-    const oldHits = results && results[searchKey] ? results[searchKey].hits : [];
-    const updatedHits = [ ...oldHits, ...hits ];
-
-    return {
-        results: {
-            ...results,
-            [searchKey]: { hits: updatedHits, page }
-        },
-        isLoading: false
-    };
-};
-
 function App (){
-    let _isMounted = false;
-
     const [isMounted, setIsMounted] = useState(false);
     const [results, setResults] = useState(null);
     const [searchKey, setSearchKey] = useState('');
@@ -47,7 +31,6 @@ function App (){
 
     useEffect(() => {
         setIsMounted(true);
-        console.log('used effect');
         setSearchKey(searchTerm);
         fetchSearchTopStories(searchTerm);
 
@@ -63,7 +46,6 @@ function App (){
     function fetchSearchTopStories(_searchTerm, page = 0) {
         setIsLoading(true);
 
-        console.log(_searchTerm);
         axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${_searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
             .then(result => setSearchTopStories(result.data))
             .catch(error => setError(error));
@@ -82,10 +64,9 @@ function App (){
     }
 
     function onSearchSubmit(event) {
-        const { searchTerm } = this.state;
-        this.setState({ searchKey: searchTerm });
-        if (this.needsToSearchTopStories(searchTerm)) {
-            this.fetchSearchTopStories(searchTerm);
+        setSearchKey(searchTerm);
+        if (needsToSearchTopStories(searchTerm)) {
+            fetchSearchTopStories(searchTerm);
         }
         event.preventDefault();
     }
@@ -105,7 +86,7 @@ function App (){
     }
 
     function onSearchChange(event) {
-        this.setState({ searchTerm: event.target.value })
+        setSearchTerm(event.target.value)
     }
 
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
@@ -115,7 +96,7 @@ function App (){
     return(
         <div className="page">
             <div className="interactions">
-                <Search value={searchTerm} onChange={() => onSearchChange()} onSubmit={() => onSearchSubmit()}>Search</Search>
+                <Search value={searchTerm} onChange={(e) => onSearchChange(e)} onSubmit={() => onSearchSubmit()}>Search</Search>
                 { error ? <div className="interactions"><p>Something went wrong.</p></div> : <Table list={list} onDismiss={() => onDismiss()}/> }
                 <div className="interactions">
                     <ButtonWithLoading isLoading={isLoading} onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>More</ButtonWithLoading> }
