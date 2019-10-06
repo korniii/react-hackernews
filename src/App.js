@@ -1,4 +1,4 @@
-import React, { Component, useState, } from 'react';
+import React, { Component, useState, useEffect } from 'react';
 import axios from 'axios';
 import { sortBy } from 'lodash';
 import classNames from 'classnames';
@@ -35,58 +35,53 @@ const updateSearchTopStoriesState = (hits, page) => (prevState) => {
     };
 };
 
-class App extends Component {
-    _isMounted = false;
+function App (){
+    let _isMounted = false;
 
-    constructor(props) {
-      super(props);
+    const [isMounted, setIsMounted] = useState(false);
+    const [results, setResults] = useState(null);
+    const [searchKey, setSearchKey] = useState('');
+    const [searchTerm, setSearchTerm] = useState(DEFAULT_QUERY);
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-      this.state =  {
-          results: null,
-          searchKey: '',
-          searchTerm: DEFAULT_QUERY,
-          error: null,
-          isLoading: false,
-      };
-      this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
-      this.setSearchTopStories = this.setSearchTopStories.bind(this);
-      this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
-      this.onDismiss = this.onDismiss.bind(this);
-      this.onSearchChange = this.onSearchChange.bind(this);
-      this.onSearchSubmit = this.onSearchSubmit.bind(this);
-    }
+    useEffect(() => {
+        setIsMounted(true);
+        console.log('used effect');
+        setSearchKey(searchTerm);
+        fetchSearchTopStories(searchTerm);
 
-    needsToSearchTopStories(searchTerm) {
+        return function cleanup () {
+            setIsMounted(false);
+        }
+    }, [isMounted])
+
+    function needsToSearchTopStories(searchTerm) {
         return !this.state.results[searchTerm];
     }
 
-    fetchSearchTopStories(searchTerm, page = 0) {
-        this.setState({ isLoading: true });
+    function fetchSearchTopStories(_searchTerm, page = 0) {
+        setIsLoading(true);
 
-        axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
-            .then(result => this._isMounted && this.setSearchTopStories(result.data))
-            .catch(error => this._isMounted && this.setState({ error }));
+        console.log(_searchTerm);
+        axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${_searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
+            .then(result => setSearchTopStories(result.data))
+            .catch(error => setError(error));
     }
 
-    setSearchTopStories(result) {
+    function setSearchTopStories(result) {
         const { hits, page } = result;
 
-        this.setState(updateSearchTopStoriesState(hits, page));
+        const oldHits = results && results[searchKey] ? results[searchKey].hits : [];
+        const updatedHits = [ ...oldHits, ...hits ];
+
+        const updatedResults = {...results, [searchKey]: { hits: updatedHits, page }}
+        setResults(updatedResults);
+        setIsLoading(false)
+
     }
 
-    componentDidMount() {
-        this._isMounted = true;
-
-        const { searchTerm } = this.state;
-        this.setState({ searchKey: searchTerm });
-        this.fetchSearchTopStories(searchTerm);
-    }
-
-    componentWillUnmount() {
-        this._isMounted = false;
-    }
-
-    onSearchSubmit(event) {
+    function onSearchSubmit(event) {
         const { searchTerm } = this.state;
         this.setState({ searchKey: searchTerm });
         if (this.needsToSearchTopStories(searchTerm)) {
@@ -95,7 +90,7 @@ class App extends Component {
         event.preventDefault();
     }
 
-    onDismiss(id) {
+    function onDismiss(id) {
         const { searchKey, results } = this.state;
         const { hits, page } = results[searchKey];
 
@@ -109,26 +104,25 @@ class App extends Component {
         });
     }
 
-    onSearchChange(event) {
+    function onSearchChange(event) {
         this.setState({ searchTerm: event.target.value })
     }
 
-    render() {
-        const { searchTerm, results, searchKey, error, isLoading } = this.state;
-        const page = (results && results[searchKey] && results[searchKey].page) || 0;
-        const list = (results && results[searchKey] && results[searchKey].hits) || [];
+    const page = (results && results[searchKey] && results[searchKey].page) || 0;
+    const list = (results && results[searchKey] && results[searchKey].hits) || [];
 
-        return(
-          <div className="page">
-              <div className="interactions">
-                  <Search value={searchTerm} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>Search</Search>
-                  { error ? <div className="interactions"><p>Something went wrong.</p></div> : <Table list={list} onDismiss={this.onDismiss}/> }
-                  <div className="interactions">
-                      <ButtonWithLoading isLoading={isLoading} onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>More</ButtonWithLoading> }
-                  </div>
-              </div>
-          </div>
-          )}
+
+    return(
+        <div className="page">
+            <div className="interactions">
+                <Search value={searchTerm} onChange={() => onSearchChange()} onSubmit={() => onSearchSubmit()}>Search</Search>
+                { error ? <div className="interactions"><p>Something went wrong.</p></div> : <Table list={list} onDismiss={() => onDismiss()}/> }
+                <div className="interactions">
+                    <ButtonWithLoading isLoading={isLoading} onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>More</ButtonWithLoading> }
+                </div>
+            </div>
+        </div>
+    )
 }
 
 const Search = ({ value,onChange,onSubmit,children }) => {
